@@ -1,11 +1,12 @@
 #variaveis globais
 NUMBER_MOVES = 15
 NUMBER_GENES = 9
-NUMBER_ORGANISMS = 15
+NUMBER_ORGANISMS = 10
 MUTATION_RATE = 0.001
 MAXIMUM_FITNESS = NUMBER_GENES
 modelOrganism = [0,1,2,3,4,5,6,7,8]
 geracao = []
+ngeracao = 1
 
 
 from random import *
@@ -18,12 +19,22 @@ class Individuo:
         self.historico = []
         self.fitness = fitness
 
+def crossover(geracao):
+    ngeracao += 1
+    novaGeracao = geracao[:]
+    geracao = []
+    for i in range (0,NUMBER_ORGANISMS):
+        #fazer o crossover  entre os elementos de novaGeracao para inserir na nova lista geracao        
+        geracao.append(Individuo(i*ngeracao,novaGeracao[i],novaGeracao[i].fitness))
 
 def movimento(individuo):
     branco = 0
-    for i in range (0,NUMBER_GENES):
-        if (individuo.gene[i]==0):
+    i = 0
+    while(branco == 0):
+        if(individuo.gene[i]==0):
             branco = i
+        i+=1;
+        
     for i in range (0,NUMBER_MOVES):
         sair = False
         while(not sair):
@@ -92,7 +103,77 @@ def DoOneRun():
 def Fitness(individuo):
     fitness = 0
     for gene in range (0,NUMBER_GENES):
-        fitness += abs(individuo[gene]-gene)
+        if(gene==0):
+            if (individuo[gene]==8):
+                fitness+=4
+            elif (individuo[gene]==5 or individuo[gene]==7):
+                fitness+=3
+            elif (individuo[gene]==1 or individuo[gene]==3):
+                fitness+=1
+            else:
+                fitness+=2
+        elif(gene==1):
+            if (individuo[gene]==8 or individuo[gene]==6):
+                fitness+=3
+            elif (individuo[gene]==5 or individuo[gene]==7 or individuo[gene]==3):
+                fitness+=2
+            else:
+                fitness+=1
+        elif(gene==2):
+            if (individuo[gene]==6):
+                fitness+=4
+            elif (individuo[gene]==3 or individuo[gene]==7):
+                fitness+=3
+            elif (individuo[gene]==1 or individuo[gene]==5):
+                fitness+=1
+            else:
+                fitness+=2
+        elif(gene==3):
+            if (individuo[gene]==2 or individuo[gene]==8):
+                fitness+=3
+            elif (individuo[gene]==0 or individuo[gene]==4 or individuo[gene]==6):
+                fitness+=1
+            else:
+                fitness+=2
+        elif(gene==4):
+            if (individuo[gene]==1 or individuo[gene]==3 or individuo[gene]==5 or individuo[gene]==7):
+                fitness+=1
+            else:
+                fitness+=2
+        elif(gene==5):
+            if (individuo[gene]==0 or individuo[gene]==6):
+                fitness+=3
+            elif (individuo[gene]==2 or individuo[gene]==4 or individuo[gene]==8):
+                fitness+=1
+            else:
+                fitness+=2
+        if(gene==6):
+            if (individuo[gene]==2):
+                fitness+=4
+            elif (individuo[gene]==5 or individuo[gene]==1):
+                fitness+=3
+            elif (individuo[gene]==7 or individuo[gene]==3):
+                fitness+=1
+            else:
+                fitness+=2
+        elif(gene==7):
+            if (individuo[gene]==0 or individuo[gene]==2):
+                fitness+=3
+            elif (individuo[gene]==1 or individuo[gene]==5 or individuo[gene]==3):
+                fitness+=2
+            else:
+                fitness+=1
+        else:
+            if (individuo[gene]==0):
+                fitness+=4
+            elif (individuo[gene]==1 or individuo[gene]==3):
+                fitness+=3
+            elif (individuo[gene]==7 or individuo[gene]==5):
+                fitness+=1
+            else:
+                fitness+=2
+            
+       # fitness += abs(individuo[gene]-gene)
     if (fitness == 0):
         print("Sequencia para resolver: ",individuo.historico)
     return fitness
@@ -125,14 +206,14 @@ def InitializeOrganisms():
         movimento(geracao[organism])
         print(geracao[organism].gene)
         geracao[organism].fitness = Fitness(geracao[organism].gene)
-        print("Valor fitness: ", geracao[organism].fitness,"\nID: ",geracao[organism].id)
+        print("Valor fitness: ", geracao[organism].fitness,"Melhoria: ",Fitness(inicialModel)-geracao[organism].fitness,"\nID: ",geracao[organism].id)
 
 
     print("\nIndividuos com melhor fitness após movimentos\n")
     ordena_fitness(geracao)
     for organism in range(0,NUMBER_ORGANISMS):
         print(geracao[organism].gene)
-        print("Valor fitness: ", geracao[organism].fitness,"\nID: ",geracao[organism].id,"\n")
+        print("Valor fitness: ", geracao[organism].fitness,"Melhoria: ",Fitness(inicialModel)-geracao[organism].fitness,"\nID: ",geracao[organism].id,'\n')
 
 
 DoOneRun()
