@@ -1,8 +1,9 @@
 #variaveis globais
 NUMBER_MOVES = 5
 NUMBER_GENES = 9
-NUMBER_ORGANISMS = 100
+NUMBER_ORGANISMS = 10
 MUTATION_RATE = 0.001
+PONTUACAO = 0
 modelOrganism = [0,1,2,3,4,5,6,7,8]
 geracao = []
 ngeracao = 0
@@ -17,67 +18,49 @@ class Individuo:
         self.gene = gene
         self.historico = ["Inicio"]
         self.fitness = fitness
+        self.estados = []
+        self.estados.append(gene)
 
 def crossover(geracao):
+    global PONTUACAO
+    PONTUACAO-=2
     global NUMBER_MOVES
     NUMBER_MOVES += 1
-    aux = NUMBER_MOVES
     global ngeracao
-    novaGeracao = geracao[:]
+    novaGeracao = geracao
+    for i in range(0,NUMBER_ORGANISMS):
+        novaGeracao.append(Individuo((i+1)+ngeracao,novaGeracao[1].gene,0))
+        novaGeracao[i].historico = novaGeracao[1].historico
+        novaGeracao[i].fitness = novaGeracao[1].fitness
     geracao = []
     for i in range (0,NUMBER_ORGANISMS):
         #fazer o crossover  entre os elementos de novaGeracao para inserir na nova lista geracao
         geracao.append(Individuo((i+1)+ngeracao,novaGeracao[i].gene,0))
-        #if((NUMBER_MOVES-1)%5==0):
-           # print(len(geracao[i].historico))
-            #NUMBER_MOVES -= 3
-
-        geracao[i].historico =  novaGeracao[i].historico[:(NUMBER_MOVES)]
+        geracao[i].historico =  novaGeracao[i].historico[:]
         movimento(geracao[i],(NUMBER_MOVES),(NUMBER_MOVES+1))
 
         geracao[i].fitness = Fitness(geracao[i])
         if (geracao[i].fitness == 0):
             print(geracao[i].gene,"Fitness individuo: ", geracao[i].fitness, "ID: ", geracao[i].id)
             print("Sequencia para resolver: ",geracao[i].historico)
-            print("Programa acabou na geracao",NUMBER_MOVES)
+            print("Programa acabou na geracao",NUMBER_MOVES,"com",len(geracao[i].historico)-1,"movimentos")
             input("---")
 
     ngeracao += NUMBER_ORGANISMS
     return geracao
 
-def mede_maior(a,b,c,d):
-    M = 0
-
-    if(a>M):
-        M=a
-    if(b>M):
-        M=b
-    if(c>M):
-        M=c
-    if(d>M):
-        M=d
-
-    if(M==a):
-        return "D"
-    elif(M==b):
-        return "E"
-    elif(M==c):
-        return "C"
-    else:
-        return "B"
-
 def movimento(individuo, inicio, fim):
     branco = -1
+    continua = True
     i = 0
-    maior = i
     while(branco == -1):
         if(individuo.gene[i]==0):
             branco = i
         i+=1;
 
-    for i in range (inicio,fim):
+    #for i in range (inicio,fim):
+    while(continua):
         sair = False
-        fitness_atual = Fitness(individuo)
         while(not sair):
             sair = True
             aux = randint(0,4)
@@ -91,11 +74,14 @@ def movimento(individuo, inicio, fim):
                 branco += 3
             else:
                 sair = False
+        individuo.estados.append(individuo.gene)
+        if (Fitness(individuo)==PONTUACAO):
+            continua = False
 
 
 def ordena_fitness(geracao):
     from operator import attrgetter
-    geracao.sort(key=lambda a: a.fitness)
+    geracao.sort(key=lambda a: len(a.historico))
 
 def media_fitness(geracao):
     media_geracao = 0
@@ -253,6 +239,7 @@ def Fitness(individuo):
 
 def InitializeOrganisms():
     vet_comparacao = []
+    global PONTUACAO
     for aux in range (0,NUMBER_GENES):
         vet_comparacao.append (False)
 
@@ -272,17 +259,22 @@ def InitializeOrganisms():
 
     print(inicialModel.gene[0:NUMBER_GENES])
     print(modelOrganism[0:NUMBER_GENES])
-    print("Valor do fitness inicial: ",Fitness(inicialModel))
-
-    print("\nIndividuos após",NUMBER_MOVES,"movimentos\n")
+    PONTUACAO = Fitness(inicialModel)
+    print("Valor do fitness inicial: ",PONTUACAO)
+    PONTUACAO-=4
+    print("\nIndividuos chegaram a",PONTUACAO, "cada um com uma quantidade de movimentos\n")
     for organism in range(0,NUMBER_ORGANISMS):
         movimento(geracao[organism],0,NUMBER_MOVES)
-        print(geracao[organism].gene)
         geracao[organism].fitness = Fitness(geracao[organism])
-        print("Valor fitness: ", geracao[organism].fitness,"Melhoria: ",Fitness(inicialModel)-geracao[organism].fitness,"\nID: ",geracao[organism].id)
 
+    ordena_fitness(geracao)
+    for organism in range(0,NUMBER_ORGANISMS):
+        print(geracao[organism].gene)
+        print("Valor fitness: ", geracao[organism].fitness,"Melhoria: ",Fitness(inicialModel)-geracao[organism].fitness,"\nID: ",geracao[organism].id)
+        print("Quantidade de movimentos necessários: ",len(geracao[organism].historico)-1)
 
 InitializeOrganisms()
 while(True):
     DoOneRun()
-    print("\nNUMBER_MOVES =", NUMBER_MOVES)
+    print("\nGeracao =", NUMBER_MOVES)
+    print(geracao[1].historico)
