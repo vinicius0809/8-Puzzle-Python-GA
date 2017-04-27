@@ -1,11 +1,11 @@
 #variaveis globais
-NUMBER_MOVES = 1
+NUMBER_MOVES = 5
 NUMBER_GENES = 9
-NUMBER_ORGANISMS = 50
+NUMBER_ORGANISMS = 100
 MUTATION_RATE = 0.001
 modelOrganism = [0,1,2,3,4,5,6,7,8]
 geracao = []
-ngeracao = 1
+ngeracao = 0
 
 
 from random import *
@@ -23,23 +23,53 @@ def crossover(geracao):
     NUMBER_MOVES += 1
     aux = NUMBER_MOVES
     global ngeracao
-    ngeracao +=1
     novaGeracao = geracao[:]
     geracao = []
     for i in range (0,NUMBER_ORGANISMS):
         #fazer o crossover  entre os elementos de novaGeracao para inserir na nova lista geracao
-        geracao.append(Individuo((i+1)*ngeracao,novaGeracao[i].gene,0))
-        novoHistorico = novaGeracao[i].historico[:(NUMBER_MOVES-1)]
-        geracao[i].historico = []
-        geracao[i].historico = novoHistorico[:]
-        movimento(geracao[i],(NUMBER_MOVES-1),(NUMBER_MOVES))
+        geracao.append(Individuo((i+1)+ngeracao,novaGeracao[i].gene,0))
+        #if((NUMBER_MOVES-1)%5==0):
+           # print(len(geracao[i].historico))
+            #NUMBER_MOVES -= 3
+
+        geracao[i].historico =  novaGeracao[i].historico[:(NUMBER_MOVES)]
+        movimento(geracao[i],(NUMBER_MOVES),(NUMBER_MOVES+1))
+
         geracao[i].fitness = Fitness(geracao[i])
+        if (geracao[i].fitness == 0):
+            print(geracao[i].gene,"Fitness individuo: ", geracao[i].fitness, "ID: ", geracao[i].id)
+            print("Sequencia para resolver: ",geracao[i].historico)
+            print("Programa acabou na geracao",NUMBER_MOVES)
+            input("---")
+
+    ngeracao += NUMBER_ORGANISMS
     return geracao
 
+def mede_maior(a,b,c,d):
+    M = 0
+
+    if(a>M):
+        M=a
+    if(b>M):
+        M=b
+    if(c>M):
+        M=c
+    if(d>M):
+        M=d
+
+    if(M==a):
+        return "D"
+    elif(M==b):
+        return "E"
+    elif(M==c):
+        return "C"
+    else:
+        return "B"
 
 def movimento(individuo, inicio, fim):
     branco = -1
     i = 0
+    maior = i
     while(branco == -1):
         if(individuo.gene[i]==0):
             branco = i
@@ -47,16 +77,17 @@ def movimento(individuo, inicio, fim):
 
     for i in range (inicio,fim):
         sair = False
+        fitness_atual = Fitness(individuo)
         while(not sair):
             sair = True
             aux = randint(0,4)
-            if(aux ==0 and individuo.historico[-1] != 'Esquerda' and move_direita(individuo,branco,individuo.fitness)) :
+            if(aux == 0 and individuo.historico[-1] != 'Esquerda' and move_direita(individuo,branco)) :
                 branco += 1
-            elif(aux ==1 and individuo.historico[-1] !='Direita'and move_esquerda(individuo,branco,individuo.fitness)):
+            elif(aux == 1 and individuo.historico[-1] !='Direita' and move_esquerda(individuo,branco)):
                 branco -= 1
-            elif(aux ==2 and individuo.historico[-1] != 'Baixo' and move_cima(individuo,branco,individuo.fitness)):
+            elif(aux == 2 and individuo.historico[-1] != 'Baixo' and move_cima(individuo,branco)):
                 branco -= 3
-            elif(aux ==3 and individuo.historico[-1] != 'Cima' and move_baixo(individuo,branco,individuo.fitness)):
+            elif(aux == 3 and individuo.historico[-1] != 'Cima' and move_baixo(individuo,branco)):
                 branco += 3
             else:
                 sair = False
@@ -72,34 +103,38 @@ def media_fitness(geracao):
         media_geracao += geracao[i].fitness
     return media_geracao/NUMBER_ORGANISMS
 
-def move_direita(organism,i,fitness_atual):
+def move_direita(organism,i):
     if (i==0 or i==1 or i==3 or i==4 or i==6 or i==7):
         organism.gene[i],organism.gene[i+1] = organism.gene[i+1], organism.gene[i]
         organism.historico.append("Direita")
         return True
+
     return False
 
 
-def move_esquerda(organism,i,fitness_atual):
+def move_esquerda(organism,i):
     if(i==2 or i==1 or i==5 or i==4 or i==8 or i==7):
         organism.gene[i],organism.gene[i-1] = organism.gene[i-1], organism.gene[i]
         organism.historico.append("Esquerda")
         return True
+
     return False
 
 
-def move_baixo(organism,i,fitness_atual):
+def move_baixo(organism,i):
     if (i==1 or i==4 or i==2 or i==5 or i==0 or i==3):
         organism.gene[i],organism.gene[i+3] = organism.gene[i+3], organism.gene[i]
         organism.historico.append("Baixo")
         return True
+
     return False
 
-def move_cima(organism,i,fitness_atual):
+def move_cima(organism,i):
     if (i==7 or i==4 or i==3 or i==5 or i==6 or i==8):
         organism.gene[i],organism.gene[i-3] = organism.gene[i-3], organism.gene[i]
         organism.historico.append("Cima")
         return True
+
     return False
 
 def DoOneRun():
@@ -112,7 +147,7 @@ def DoOneRun():
       ordena_fitness(geracao)
       for organism in range(0,NUMBER_ORGANISMS):
           print(geracao[organism].gene)
-          print("Valor fitness: ", geracao[organism].fitness,"\nID: ",geracao[organism].id,'\n')
+          print("Valor fitness: ", geracao[organism].fitness,"\nID: ",geracao[organism].id,'\n')#, geracao[organism].historico, '\n')
 
       #while(True):
         #perfectGeneration = EvaluateOrganisms()
@@ -213,12 +248,6 @@ def Fitness(individuo):
                 fitness+=2
 
     individuo.fitness = fitness
-
-    if (fitness == 0):
-        print(individuo.gene,"Fitness individuo: ", individuo.fitness, "ID: ", individuo.id)
-        print("Sequencia para resolver: ",individuo.historico)
-        print("Programa acabou na geracao",NUMBER_MOVES)
-        input("---")
 
     return individuo.fitness
 
